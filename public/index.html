@@ -2,10 +2,10 @@
 <style>
 :root{--ink:#0d1b2a;--ink2:#1b2b40;--ac:#0ea5a4;--am:#f59e0b;--bg:#eef2f6;--t:#132033;--mut:#64748b}*{box-sizing:border-box}
 body{margin:0;font:14px Inter,system-ui,sans-serif;background:var(--bg);color:var(--t);display:flex;min-height:100vh}
-#nav{width:232px;background:linear-gradient(180deg,var(--ink),var(--ink2));color:#cbd5e1;padding:18px 12px;position:sticky;top:0;height:100vh;flex-shrink:0;display:flex;flex-direction:column;gap:4px}#nav:empty{display:none}
-.brand{font-size:18px;font-weight:800;color:#fff;padding:4px 8px 16px}.brand small{display:block;font-weight:400;color:#7dd3d2;font-size:11px}
-button{background:var(--ac);color:#fff;border:0;border-radius:10px;padding:8px 14px;cursor:pointer;font:inherit;font-weight:600}button:hover{filter:brightness(1.08)}
-#nav button{background:none;text-align:left;color:#cbd5e1;padding:10px 12px;width:100%;font-weight:500}#nav button:hover{background:#ffffff14}#nav button.on{background:var(--ac);color:#fff;font-weight:700}
+#nav{width:232px;background:linear-gradient(180deg,var(--nav1,var(--ink)),var(--nav2,var(--ink2)));color:var(--navt,#cbd5e1);padding:18px 12px;position:sticky;top:0;height:100vh;flex-shrink:0;display:flex;flex-direction:column;gap:4px}#nav:empty{display:none}
+.brand{font-size:18px;font-weight:800;color:var(--navb,#fff);padding:4px 8px 16px}.brand small{display:block;font-weight:400;color:#7dd3d2;font-size:11px}
+button{background:var(--ac);color:var(--onac,#fff);border:0;border-radius:10px;padding:8px 14px;cursor:pointer;font:inherit;font-weight:600}button:hover{filter:brightness(1.08)}
+#nav button{background:none;text-align:left;color:var(--navt,#cbd5e1);padding:10px 12px;width:100%;font-weight:500}#nav button:hover{background:var(--navh,#ffffff14)}#nav button.on{background:var(--ac);color:var(--onac,#fff);font-weight:700}
 .me{margin-top:auto;padding:12px 8px 0;border-top:1px solid #ffffff22;font-size:12px}
 #app{flex:1;min-width:0}#top{padding:16px 28px;background:#fff;border-bottom:1px solid #e2e8f0;font-weight:800;font-size:19px}main{padding:22px 28px;max-width:1240px}
 :focus-visible{outline:2px solid var(--am);outline-offset:2px}
@@ -123,6 +123,30 @@ html[data-theme=dark] .sem>div{background:#0d192b}
 .ico{width:46px;height:46px;flex:none}.vhead{display:flex;align-items:center;gap:14px;margin-bottom:14px}.vhead b{display:block;font-family:'Fraunces',Georgia,serif;font-size:22px}.vhead small{color:var(--mut)}
 .cbtn .ico{width:40px;height:40px;margin-bottom:4px}#cg h4 .ico{width:24px;height:24px;vertical-align:middle;margin-right:6px}
 @media print{.vhead{display:none}}
+
+/* ===== Foto del hero + temas de color ===== */
+:root{--foto:url("https://commons.wikimedia.org/wiki/Special:FilePath/Centro%2C%20Veracruz%20%2816664660842%29.jpg?width=1600")}
+html[data-color=blanco]{--ink:#0f172a;--ink2:#1e293b;--ac:#334155;--ac2:#0f172a;--gold:#94a3b8;--nav1:#fff;--nav2:#f8fafc;--navt:#334155;--navb:#0f172a;--navh:#0f172a0f}
+html[data-color=amarillo]{--ink:#3b2f05;--ink2:#52410a;--ac:#eab308;--ac2:#a16207;--gold:#facc15;--onac:#1c1917}
+html[data-color=vino]{--ink:#2b0a14;--ink2:#4a1120;--ac:#9f1239;--ac2:#4c0519;--gold:#d4a24c}
+html[data-color=azul]{--ink:#0b1e3f;--ink2:#12306b;--ac:#2563eb;--ac2:#1e3a8a;--gold:#60a5fa}
+html[data-color=rojo]{--ink:#2a0b0b;--ink2:#4a1313;--ac:#dc2626;--ac2:#7f1d1d;--gold:#fca5a5}
+html[data-color=verde]{--ink:#0a2417;--ink2:#123d27;--ac:#16a34a;--ac2:#14532d;--gold:#86efac}
+html[data-color=naranja]{--ink:#2b1303;--ink2:#4a2106;--ac:#ea580c;--ac2:#9a3412;--gold:#fdba74}
+html[data-color=morado]{--ink:#1e0b3a;--ink2:#35176b;--ac:#7c3aed;--ac2:#4c1d95;--gold:#c4b5fd}
+html[data-color=rosa]{--ink:#3a0b25;--ink2:#5c1139;--ac:#db2777;--ac2:#831843;--gold:#f9a8d4}
+.brand small{color:var(--gold)}
+.k1{background:linear-gradient(135deg,var(--ac),var(--ac2,#0369a1))}
+.bar i{background:linear-gradient(90deg,var(--ac),var(--gold))}
+.hero,.lgl{background:linear-gradient(115deg,color-mix(in srgb,var(--ink) 90%,transparent),color-mix(in srgb,var(--ac2,var(--ink)) 55%,transparent)),var(--foto) center/cover no-repeat,linear-gradient(120deg,var(--ink),var(--ac2,var(--ink)))}
+.hero{min-height:190px;display:flex;flex-direction:column;justify-content:flex-end}
+.lgl{min-height:380px}.hero-img{display:none}
+.hero h2,.lgl h1{text-shadow:0 2px 14px #0009}
+#clp{position:absolute;top:44px;right:0;background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px;display:none;grid-template-columns:repeat(5,28px);gap:8px;box-shadow:0 12px 30px -10px #0b162699}
+#clp.open{display:grid}
+#clp .sw{width:28px;height:28px;border-radius:50%;padding:0;border:2px solid #fff;box-shadow:0 0 0 1px #0004}
+#clp .sw[aria-pressed=true]{box-shadow:0 0 0 2px #0b1626,0 0 0 4px #fff}
+html[data-theme=dark] #clp{background:#111e33}
 </style></head><body>
 <a class=skip href="#main">Saltar al contenido</a><aside id="nav" aria-label="Menú principal"></aside><div id="app"><div id="top"></div><main id="main" tabindex="-1"></main><footer id=ft></footer></div>
 <script src="/socket.io/socket.io.js"></script><script src="/lang-nah.js"></script>
@@ -253,7 +277,15 @@ const setTheme=t=>{document.documentElement.dataset.theme=t;localStorage.theme=t
 function applyLang(re){const nah=LANG()=='nah';$('#lgb').textContent=nah?'🌐 Nāhuatl':'🌐 Español';document.documentElement.lang=nah?'nah':'es';
 if(!nah){const w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);let n;while(n=w.nextNode())if(n._o!==undefined){n.data=n._o;n._o=undefined}}
 if(re)ME?go(cur):login();setTimeout(()=>tw(document.body),0)}
-function ctl(){const d=document.createElement('div');d.id='ctl';d.innerHTML='<button id=thb class=notr title="Modo claro u oscuro"></button><button id=lgb class=notr title="Idioma"></button>';document.body.append(d);
+function ctl(){const d=document.createElement('div');d.id='ctl';d.innerHTML='<button id=clb class=notr title="Color de la app" aria-label="Color de la app" aria-expanded=false>🎨</button><div id=clp role=group aria-label="Colores"></div><button id=thb class=notr title="Modo claro u oscuro"></button><button id=lgb class=notr title="Idioma"></button>';document.body.append(d);
+const COLS=[['','Original','linear-gradient(135deg,#0b1626 50%,#0f9d9a 50%)'],['blanco','Blanco','#fff'],['amarillo','Amarillo','#eab308'],['vino','Vino','#9f1239'],['azul','Azul','#2563eb'],['rojo','Rojo','#dc2626'],['verde','Verde','#16a34a'],['naranja','Naranja','#ea580c'],['morado','Morado','#7c3aed'],['rosa','Rosa','#db2777']];
+const setColor=c=>{const h=document.documentElement;c?h.dataset.color=c:delete h.dataset.color;try{localStorage.color=c||''}catch(e){}document.querySelectorAll('#clp .sw').forEach(b=>b.setAttribute('aria-pressed',b.dataset.c==c));const m=document.querySelector('meta[name=theme-color]');if(m)m.content=getComputedStyle(h).getPropertyValue('--ink').trim()||'#0b1626'};
+$('#clp').innerHTML=COLS.map(([c,n,bg])=>`<button class="sw notr" data-c="${c}" title="${n}" aria-label="${n}" aria-pressed=false style="background:${bg}"></button>`).join('');
+$('#clp').onclick=e=>{const b=e.target.closest('.sw');if(b)setColor(b.dataset.c)};
+$('#clb').onclick=e=>{e.stopPropagation();const o=$('#clp').classList.toggle('open');$('#clb').setAttribute('aria-expanded',o)};
+document.addEventListener('click',e=>{if(!e.target.closest('#clp'))$('#clp').classList.remove('open')});
+document.addEventListener('keydown',e=>{if(e.key=='Escape')$('#clp').classList.remove('open')});
+setColor((()=>{try{return localStorage.color||''}catch(e){return ''}})());
 $('#thb').onclick=()=>setTheme(document.documentElement.dataset.theme=='dark'?'light':'dark');
 $('#lgb').onclick=()=>{localStorage.lang=LANG()=='es'?'nah':'es';applyLang(true)};
 setTheme(localStorage.theme||(window.matchMedia&&matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light'));applyLang()}
