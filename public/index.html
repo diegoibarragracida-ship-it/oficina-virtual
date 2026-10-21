@@ -147,6 +147,41 @@ html[data-color=rosa]{--ink:#3a0b25;--ink2:#5c1139;--ac:#db2777;--ac2:#831843;--
 #clp .sw{width:28px;height:28px;border-radius:50%;padding:0;border:2px solid #fff;box-shadow:0 0 0 1px #0004}
 #clp .sw[aria-pressed=true]{box-shadow:0 0 0 2px #0b1626,0 0 0 4px #fff}
 html[data-theme=dark] #clp{background:#111e33}
+
+/* ===== El color cubre toda la app ===== */
+html[data-color]:not([data-theme=dark]){--bg:color-mix(in srgb,var(--ac) 16%,#fff);--card:color-mix(in srgb,var(--ac) 4%,#fff);--line:color-mix(in srgb,var(--ac) 24%,#fff)}
+html[data-color][data-theme=dark]{--bg:color-mix(in srgb,var(--ac) 13%,#0b1220);--card:color-mix(in srgb,var(--ac) 10%,#111e33);--line:color-mix(in srgb,var(--ac) 30%,#14213a)}
+html[data-color=blanco]:not([data-theme=dark]){--bg:#fff;--card:#fff;--line:#e2e8f0;--nav3:#eef2f6;--navl:#0f172a1a}
+html[data-color=blanco] #nav{border-right:1px solid var(--line)}
+html[data-color] body{background:radial-gradient(1200px 500px at 85% -10%,color-mix(in srgb,var(--ac) 22%,transparent),transparent 60%),var(--bg)}
+html[data-color] #nav{background:linear-gradient(185deg,var(--nav1,var(--ink)),var(--nav2,var(--ink2)) 65%,var(--nav3,var(--ac2)));color:var(--navt,#cbd5e1)}
+html[data-color] #nav button{color:var(--navt,#cbd5e1)}
+html[data-color] #nav button:hover{background:var(--navh,#ffffff1f)}
+html[data-color] #nav button.on{background:var(--ac);color:var(--onac,#fff)}
+html[data-color] .brand{color:var(--navb,#fff);border-color:var(--navl,#ffffff22)}
+html[data-color] .me{border-color:var(--navl,#ffffff22)}
+html[data-color] #top{background:color-mix(in srgb,var(--card) 88%,transparent);border-color:var(--line)}
+html[data-color] :is(.card,.tiles button,.kc,.col>b,.chat>div,.steps3>div,input,select,textarea){background:var(--card)}
+html[data-color] .card{border-top-color:color-mix(in srgb,var(--gold) 60%,var(--card))}
+html[data-color] :is(input,select,textarea){border-color:var(--line)}
+html[data-color] :is(input,select,textarea):focus{border-color:var(--ac);box-shadow:0 0 0 4px color-mix(in srgb,var(--ac) 22%,transparent)}
+html[data-color] .col{background:color-mix(in srgb,var(--ac) 10%,var(--bg))}
+html[data-color] :is(.news,.sem>div,.cbtn,.chat){background:color-mix(in srgb,var(--ac) 6%,var(--card))}
+html[data-color] :is(tr.c:hover,.row[onclick]:hover){background:color-mix(in srgb,var(--ac) 11%,var(--card))}
+html[data-color] :is(td,th,.row,footer){border-color:var(--line)}
+html[data-color] :is(.bar,.tag){background:color-mix(in srgb,var(--ac) 16%,var(--card))}
+html[data-color] :is(table button,.row button,.kc button){background:color-mix(in srgb,var(--ac) 14%,var(--card));color:var(--t)}
+html[data-color] .guia{background:linear-gradient(120deg,color-mix(in srgb,var(--ac) 10%,var(--card)),var(--card))}
+html[data-color] ::selection{background:color-mix(in srgb,var(--ac) 30%,transparent)}
+html[data-color] .k1{background:linear-gradient(135deg,var(--ac2),color-mix(in srgb,var(--ac2) 60%,var(--ink)))}
+html[data-color] .k2{background:linear-gradient(135deg,color-mix(in srgb,var(--ac2) 80%,var(--gold)),var(--ac2))}
+html[data-color] .k3{background:linear-gradient(135deg,var(--ink2),var(--ink))}
+html[data-color] .k4{background:linear-gradient(135deg,color-mix(in srgb,var(--ac2) 70%,var(--ac)),var(--ac2))}
+html[data-color] .kpi.k5{background:linear-gradient(135deg,var(--ac2),var(--ink))}
+html[data-color] [fill="#0f9d9a"]{fill:var(--ac)}
+html[data-color] [stroke="#0f9d9a"]{stroke:var(--ac)}
+html[data-color] [fill="#12405a"]{fill:var(--ac2)}
+html[data-color] [fill="#c19a3d"]{fill:var(--gold)}
 </style></head><body>
 <a class=skip href="#main">Saltar al contenido</a><aside id="nav" aria-label="Menú principal"></aside><div id="app"><div id="top"></div><main id="main" tabindex="-1"></main><footer id=ft></footer></div>
 <script src="/socket.io/socket.io.js"></script><script src="/lang-nah.js"></script>
