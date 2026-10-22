@@ -26,6 +26,7 @@ app.get('/health', (q, r) => r.send('ok'));
 
 const STAFF = ['admin', 'presidente', 'director', 'coordinador', 'encargado'];
 const TOP = ['admin', 'presidente'];
+const fotoOk = f => typeof f === 'string' && /^data:image\/(jpeg|png|webp);base64,/.test(f) && f.length < 2e6;
 const FINAL = ['Resuelto', 'Cerrado', 'Entregado', 'Rechazado', 'Cancelado'];
 const ESTATUS = {
   reporte: ['Sin clasificar', 'Recibido', 'Asignado', 'En proceso', 'Resuelto', 'Cerrado', 'Rechazado'],
@@ -125,7 +126,7 @@ async function createCase(user, tipo, b) {
   const c = await Case.create({
     folio: await nextFolio(tipo), tipo, ciudadano: user._id, department: dept, category: cat?._id, subcategoria: b.subcategoria, procedure: proc?._id,
     titulo, descripcion: b.descripcion, datos: datosC ?? b.datos, ubicacion: b.ubicacion, costo: proc?.costo.monto,
-    fotos: (b.fotos || []).filter(f => typeof f === 'string' && f.startsWith('data:image/')).slice(0, 3),
+    fotos: (b.fotos || []).filter(fotoOk).slice(0, 5),
     documentos: (b.documentos || []).filter(d => typeof d.data === 'string' && /^data:(image|application\/pdf)/.test(d.data)).slice(0, 4).map(d => ({ nombre: String(d.nombre || 'documento').slice(0, 80), data: d.data })),
     estatus, ...a, slaVence: sla, historial: [{ estatus, por: user._id, nota: 'Creado' }]
   });
@@ -175,12 +176,15 @@ api.post('/users', auth, only(...Object.keys(CREA)), wrap(async (q, s) => {
   audit(me, 'crear_usuario', { id: u._id, role }); s.json(pub(u));
 }));
 api.get('/users', auth, only(...STAFF), wrap(async (q, s) => {
-  const f = { role: { $ne: 'ciudadano' } }; if (!TOP.includes(q.user.role)) f.department = q.user.department;
+  // Cada quien ve a su gente: presidencia todo, el director su departamento, coordinador/encargado solo a su equipo directo
+  const me = q.user, f = { role: { $ne: 'ciudadano' } };
+  if (me.role === 'director') f.department = me.department;
+  else if (!TOP.includes(me.role)) f.$or = [{ _id: me._id }, { parent: me._id }];
   s.json(await User.find(f).select('-password').populate('department', 'nombre'));
 }));
 api.patch('/users/:id/activo', auth, only(...Object.keys(CREA)), wrap(async (q, s) => {
   const u = await User.findById(q.params.id);
-  if (!u || !CREA[q.user.role].includes(u.role) || (!TOP.includes(q.user.role) && String(u.department) !== String(q.user.department))) throw bad('Sin permiso', 403);
+  if (!u || !CREA[q.user.role].includes(u.role) || (!TOP.includes(q.user.role) && String(u.department) !== String(q.user.department)) || (q.user.role === 'coordinador' && String(u.parent) !== String(q.user._id))) throw bad('Sin permiso', 403);
   u.activo = !u.activo; await u.save(); audit(q.user, 'activo_usuario', { id: u._id, activo: u.activo }); s.json({ activo: u.activo });
 }));
 api.post('/categories', auth, only('admin', 'presidente', 'director'), wrap(async (q, s) => {
@@ -240,8 +244,13 @@ api.get('/cases/:id', auth, wrap(async (q, s) => {
   const o = c.toObject(); o.etapas = c.procedure ? (await Procedure.findById(c.procedure).select('etapas'))?.etapas || [] : []; if (q.user.role === 'ciudadano') o.hilo = o.hilo.filter(h => !h.interno); s.json(o);
 }));
 api.post('/cases/:id/estatus', auth, only(...STAFF), wrap(async (q, s) => {
-  const c = await getCase(q, q.params.id), { estatus, nota } = q.body;
+  const c = await getCase(q, q.params.id), { estatus, nota, foto } = q.body;
   if (!ESTATUS[c.tipo].includes(estatus) || estatus === 'Sin clasificar') throw bad('Estatus inválido');
+  // En reportes (luminarias, baches, fugas…) la foto de evidencia es obligatoria al pasar a "En proceso" y a "Resuelto"
+  if (c.tipo === 'reporte' && ['En proceso', 'Resuelto'].includes(estatus) && c.estatus !== estatus) {
+    if (!fotoOk(foto)) throw bad(`Para marcar "${estatus}" sube una foto de evidencia`);
+    c.evidencias.push({ foto, etapa: estatus, nota: String(nota || '').slice(0, 300), por: q.user._id });
+  }
   c.estatus = estatus; c.historial.push({ estatus, por: q.user._id, nota }); c.cerradoEn = FINAL.includes(estatus) ? new Date() : undefined;
   await c.save(); await notify([c.ciudadano], `${c.folio}: ahora está "${estatus}"`, c._id); audit(q.user, 'estatus', { folio: c.folio, estatus }); s.json({ ok: 1 });
 }));
@@ -255,6 +264,7 @@ api.post('/cases/:id/hilo', auth, wrap(async (q, s) => {
 api.post('/cases/:id/asignar', auth, only('admin', 'presidente', 'director', 'coordinador'), wrap(async (q, s) => {
   const c = await getCase(q, q.params.id), u = await User.findById(q.body.userId);
   if (!u || !STAFF.includes(u.role) || String(u.department) !== String(c.department)) throw bad('Usuario no válido para este departamento');
+  if (q.user.role === 'coordinador' && String(u._id) !== String(q.user._id) && String(u.parent) !== String(q.user._id)) throw bad('Solo puedes asignar a tu equipo', 403);
   c.asignadoA = u._id;
   if (u.role === 'coordinador') c.coordinador = u._id; else if (u.parent) { const p = await User.findById(u.parent); if (p?.role === 'coordinador') c.coordinador = p._id; }
   c.historial.push({ estatus: c.estatus, por: q.user._id, nota: 'Reasignado a ' + u.nombre }); await c.save();
@@ -408,6 +418,11 @@ api.post('/auth/verificar-correo', wrap(async (q, s) => {
 api.post('/cases/ventanilla', auth, only(...STAFF), wrap(async (q, s) => {
   const { nombre, telefono, email, tipo } = q.body; if (!nombre || !['reporte', 'tramite'].includes(tipo)) throw bad('Captura el nombre del ciudadano y el tipo de solicitud');
   if (tipo === 'reporte' && !q.body.descripcion) throw bad('Describe el problema');
+  // Cada área solo captura lo que le corresponde
+  if (!TOP.includes(q.user.role)) {
+    const d = tipo === 'tramite' ? (await Procedure.findById(q.body.procedure))?.department : q.body.category ? (await Category.findById(q.body.category))?.department : null;
+    if (d && String(d) !== String(q.user.department)) throw bad('Ese trámite o categoría no es de tu departamento', 403);
+  }
   const correo = String(email || '').toLowerCase().trim() || `ventanilla-${crypto.randomBytes(5).toString('hex')}@sin-correo.local`;
   const u = await User.findOne({ email: correo }) || await User.create({ nombre, telefono, email: correo, password: await bcrypt.hash(crypto.randomBytes(12).toString('hex'), 10), role: 'ciudadano', consentimiento: new Date() });
   const c = await createCase(u, tipo, q.body); audit(q.user, 'ventanilla', { folio: c.folio }); s.json({ folio: c.folio });
@@ -557,7 +572,8 @@ api.post('/proyectos/:id/votar', auth, only('ciudadano'), wrap(async (q, s) => {
 }));
 api.post('/cases/:id/evidencia', auth, only(...STAFF), wrap(async (q, s) => {
   const c = await getCase(q, q.params.id), { foto, lat, lng, nota, cerrar, activo } = q.body, n = String(nota || '').slice(0, 300);
-  c.evidencias.push({ foto: /^data:image\//.test(foto || '') ? foto : undefined, lat: +lat || undefined, lng: +lng || undefined, nota: n, por: q.user._id });
+  if (c.tipo === 'reporte' && !fotoOk(foto)) throw bad(cerrar ? 'Sube la foto del trabajo terminado' : 'Sube una foto del sitio');
+  c.evidencias.push({ foto: fotoOk(foto) ? foto : undefined, etapa: cerrar ? 'Resuelto' : 'En proceso', lat: +lat || undefined, lng: +lng || undefined, nota: n, por: q.user._id });
   if (cerrar) { c.estatus = 'Resuelto'; c.cerradoEn = new Date(); } else if (['Asignado', 'Recibido'].includes(c.estatus)) c.estatus = 'En proceso';
   c.historial.push({ estatus: c.estatus, por: q.user._id, nota: (cerrar ? 'Trabajo terminado en campo. ' : 'Visita en campo. ') + n }); await c.save();
   if (cerrar && activo) await Activo.updateOne({ codigo: String(activo).toUpperCase() }, { estado: 'Operando', ultimaAtencion: new Date() });
@@ -732,14 +748,23 @@ api.get('/stats', auth, only(...STAFF), wrap(async (q, s) => {
 // --- Notificaciones y mensajería interna
 api.get('/notifications', auth, wrap(async (q, s) => s.json(await Notification.find({ user: q.user._id }).sort('-createdAt').limit(30))));
 api.post('/notifications/leer', auth, wrap(async (q, s) => { await Notification.updateMany({ user: q.user._id }, { leida: true }); s.json({ ok: 1 }); }));
-api.get('/contactos', auth, only(...STAFF), wrap(async (q, s) => s.json(await User.find({ role: { $ne: 'ciudadano' }, activo: true, _id: { $ne: q.user._id } }).select('nombre role'))));
-const canalOk = (u, c) => c === 'circular' || (c.startsWith('dm:') && c.slice(3).split('_').includes(String(u._id))) || (c.startsWith('dept:') && (TOP.includes(u.role) || c.slice(5) === String(u.department)));
+const contactable = u => TOP.includes(u.role) ? {} : { $or: [{ department: u.department }, { role: { $in: TOP } }] };
+api.get('/contactos', auth, only(...STAFF), wrap(async (q, s) => s.json(await User.find({ role: { $ne: 'ciudadano' }, activo: true, _id: { $ne: q.user._id }, ...contactable(q.user) }).select('nombre role'))));
+const canalOk = async (u, c) => {
+  if (c === 'circular') return true;
+  if (c.startsWith('dm:')) {
+    const ids = c.slice(3).split('_'); if (!ids.includes(String(u._id))) return false;
+    const otro = ids.find(i => i !== String(u._id)); if (!otro) return true;
+    try { return !!(await User.exists({ _id: otro, role: { $ne: 'ciudadano' }, ...contactable(u) })); } catch { return false; }
+  }
+  return c.startsWith('dept:') && (TOP.includes(u.role) || c.slice(5) === String(u.department));
+};
 api.get('/mensajes', auth, only(...STAFF), wrap(async (q, s) => {
-  const canal = q.query.canal || ''; if (!canalOk(q.user, canal)) throw bad('Canal no permitido', 403);
+  const canal = q.query.canal || ''; if (!(await canalOk(q.user, canal))) throw bad('Canal no permitido', 403);
   s.json((await Message.find({ canal }).sort('-createdAt').limit(100).populate('de', 'nombre')).reverse());
 }));
 api.post('/mensajes', auth, only(...STAFF), wrap(async (q, s) => {
-  const { canal = '', texto } = q.body; if (!texto || !canalOk(q.user, canal)) throw bad('Mensaje no válido', 403);
+  const { canal = '', texto } = q.body; if (!texto || !(await canalOk(q.user, canal))) throw bad('Mensaje no válido', 403);
   if (canal === 'circular' && !TOP.includes(q.user.role)) throw bad('Solo el presidente envía circulares', 403);
   const m = await (await Message.create({ canal, texto, de: q.user._id, circular: canal === 'circular' })).populate('de', 'nombre');
   const rooms = canal === 'circular' ? ['staff'] : canal.startsWith('dept:') ? ['d:' + canal.slice(5)] : canal.slice(3).split('_').map(id => 'u:' + id);

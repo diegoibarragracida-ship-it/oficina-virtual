@@ -33,7 +33,7 @@ export const Case = model('Case', new Schema({
   folio: { type: String, unique: true }, tipo: { type: String, enum: ['reporte', 'tramite'] },
   ciudadano: ref('User'), department: ref('Department'), category: ref('Category'), subcategoria: String, procedure: ref('Procedure'),
   titulo: String, descripcion: String, datos: Schema.Types.Mixed,
-  ubicacion: { lat: Number, lng: Number, texto: String }, fotos: [String], documentos: [{ nombre: String, data: String }], transferencia: { claveRastreo: String, fecha: String, comprobante: String, motivo: String, revisadoPor: ref('User'), enviadoEn: Date }, costo: Number, etapa: { type: Number, default: 0 }, cuenta: ref('Cuenta'), multa: ref('Multa'), evidencias: [{ foto: String, lat: Number, lng: Number, nota: String, por: ref('User'), fecha: { type: Date, default: Date.now } }],
+  ubicacion: { lat: Number, lng: Number, texto: String }, fotos: [String], documentos: [{ nombre: String, data: String }], transferencia: { claveRastreo: String, fecha: String, comprobante: String, motivo: String, revisadoPor: ref('User'), enviadoEn: Date }, costo: Number, etapa: { type: Number, default: 0 }, cuenta: ref('Cuenta'), multa: ref('Multa'), evidencias: [{ foto: String, etapa: String, lat: Number, lng: Number, nota: String, por: ref('User'), fecha: { type: Date, default: Date.now } }],
   estatus: { type: String, default: 'Recibido' },
   asignadoA: ref('User'), coordinador: ref('User'), director: ref('User'),
   slaVence: Date, nivelEscalado: { type: Number, default: 0 }, cerradoEn: Date, calificacion: Number,
